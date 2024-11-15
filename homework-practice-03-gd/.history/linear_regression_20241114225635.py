@@ -35,21 +35,22 @@ class LinearRegression:
         """
         # TODO: fit weights to x and y
         
-        self.loss_history.append(self.calc_loss(x, y))
+        
         
         for i in range(self.max_iter):
             
             update = self.descent.step(x, y)
-            self.loss_history.append(self.calc_loss(x, y))
+            self.loss_history[i] = update
             
             if i == 0:
                 continue
             
+            difference = self.loss_history[i] - self.loss_history[i - 1]
             
-            if np.isnan(update).any():
+            if np.isnan(difference).any():
                 break
             
-            if np.sum(update ** 2) < self.tolerance:
+            if np.sum(difference ** 2) < self.tolerance:
                 break
             
         return self

@@ -35,7 +35,7 @@ class LinearRegression:
         """
         # TODO: fit weights to x and y
         
-        self.loss_history.append(self.calc_loss(x, y))
+        
         
         for i in range(self.max_iter):
             

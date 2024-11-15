@@ -171,7 +171,7 @@ class MomentumDescent(VanillaGradientDescent):
         """
         # TODO: implement updating weights function
         
-        self.h = self.h * self.alpha + self.lr() * gradient
+        self.h = self.h * self.alpha - self.lr() * gradient
         self.w -= self.h
         
         return - self.h

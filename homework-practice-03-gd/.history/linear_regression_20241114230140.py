@@ -35,12 +35,12 @@ class LinearRegression:
         """
         # TODO: fit weights to x and y
         
-        self.loss_history.append(self.calc_loss(x, y))
+        
         
         for i in range(self.max_iter):
             
             update = self.descent.step(x, y)
-            self.loss_history.append(self.calc_loss(x, y))
+            self.loss_history[i] = self.calc_loss(x, y)
             
             if i == 0:
                 continue
