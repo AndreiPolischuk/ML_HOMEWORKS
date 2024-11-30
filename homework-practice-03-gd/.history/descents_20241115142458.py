@@ -93,7 +93,6 @@ class BaseDescent:
         :return: prediction: np.ndarray
         """
         # TODO: implement prediction function
-        print(x.shape, self.w.shape)
         return x @ self.w
         raise NotImplementedError('BaseDescent predict function not implemented')
 
@@ -120,10 +119,18 @@ class VanillaGradientDescent(BaseDescent):
 
     def calc_gradient(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         # TODO: implement calculating gradient function
+        
+
+        
+
+        
+        
             
         difference = y - self.predict(x)
         
-        matmul = difference @ x.T
+        matmul = difference.T @ x
+        
+        
         
         if self.loss_function == LossFunction.MSE:
             return -2 / x.shape[0] * matmul

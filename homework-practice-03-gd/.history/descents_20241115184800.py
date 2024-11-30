@@ -123,7 +123,13 @@ class VanillaGradientDescent(BaseDescent):
             
         difference = y - self.predict(x)
         
-        matmul = difference @ x.T
+        print('difference shape', difference.shape, 'x_shape', x.shape)
+        
+        difference = difference[:, np.newaxis]
+        
+        matmul = difference[:, np.newaxis] @ x
+        
+        print('difference shape', difference.shape)
         
         if self.loss_function == LossFunction.MSE:
             return -2 / x.shape[0] * matmul

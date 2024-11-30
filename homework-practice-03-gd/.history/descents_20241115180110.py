@@ -120,10 +120,20 @@ class VanillaGradientDescent(BaseDescent):
 
     def calc_gradient(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         # TODO: implement calculating gradient function
+        
+
+        
+
+        
+        
             
         difference = y - self.predict(x)
         
-        matmul = difference @ x.T
+        print('difference shape', difference.shape, 'x_shape', x.shape)
+        
+        matmul = difference[:, np.newaxis] @ x
+        
+        
         
         if self.loss_function == LossFunction.MSE:
             return -2 / x.shape[0] * matmul
