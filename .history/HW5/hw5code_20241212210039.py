@@ -101,7 +101,7 @@ class DecisionTree:
                         current_click = clicks[key]
                     else:
                         current_click = 0
-                    ratio[key] = current_click / current_count 
+                    ratio[key] = current_count / current_click
                 sorted_categories = list(map(lambda x: x[0], sorted(ratio.items(), key=lambda x: x[1])))
                 categories_map = dict(zip(sorted_categories, list(range(len(sorted_categories)))))
 

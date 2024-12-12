@@ -78,8 +78,6 @@ class DecisionTree:
         self._min_samples_leaf = min_samples_leaf
 
     def _fit_node(self, sub_X, sub_y, node):
-        if sub_y.shape[0] == 0: #!!!!!!!!!!!!!!!!!!!!!!!
-            raise ValueError('Ahtung')
         if np.all(sub_y == sub_y[0]):
             node["type"] = "terminal"
             node["class"] = sub_y[0]
@@ -101,7 +99,7 @@ class DecisionTree:
                         current_click = clicks[key]
                     else:
                         current_click = 0
-                    ratio[key] = current_click / current_count 
+                    ratio[key] = current_count / current_click
                 sorted_categories = list(map(lambda x: x[0], sorted(ratio.items(), key=lambda x: x[1])))
                 categories_map = dict(zip(sorted_categories, list(range(len(sorted_categories)))))
 
@@ -109,7 +107,7 @@ class DecisionTree:
             else:
                 raise ValueError
 
-            if len(feature_vector) < 3: #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if len(feature_vector) < 3:
                 continue
 
             _, _, threshold, gini = find_best_split(feature_vector, sub_y)
