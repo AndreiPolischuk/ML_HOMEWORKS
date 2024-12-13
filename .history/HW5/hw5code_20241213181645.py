@@ -1,6 +1,5 @@
 import numpy as np
 from collections import Counter
-from sklearn.linear_model import LinearRegression
 
 
 def find_best_split(feature_vector, target_vector):
@@ -76,14 +75,10 @@ class DecisionTree:
             node["type"] = "terminal"
             node["class"] = Counter(sub_y).most_common(1)[0][0]
             return
+            
         
-        if self._min_samples_split is not None:
-            if sub_y.shape[0] < self._min_samples_split:  # !!!!!!!!!!!!!!!!!!!!!!!
-                node["type"] = "terminal"
-                node["class"] = Counter(sub_y).most_common(1)[0][0]
-                return
-        
-
+        if sub_y.shape[0] == 0:  # !!!!!!!!!!!!!!!!!!!!!!!
+            raise ValueError('Ahtung')
         if np.all(sub_y == sub_y[0]):
             node["type"] = "terminal"
             node["class"] = sub_y[0]
@@ -113,11 +108,8 @@ class DecisionTree:
             else:
                 raise ValueError
 
-            if len(feature_vector) < 3:  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if len(feature_vector) < 2:  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 continue
-            
-          
-            
 
             _, _, threshold, gini = find_best_split(feature_vector, sub_y)
             if gini_best is None or gini > gini_best:
@@ -132,17 +124,6 @@ class DecisionTree:
                                               filter(lambda x: x[1] < threshold, categories_map.items())))
                 else:
                     raise ValueError
-
-        if np.sum(split) == 0 or np.sum(np.logical_not(split)) == 0:
-            node["type"] = "terminal"
-            node["class"] = Counter(sub_y).most_common(1)[0][0]
-            return
-        
-        if self._min_samples_leaf is not None and (np.sum(split) < self._min_samples_leaf or np.sum(np.logical_not(split)) < self._min_samples_leaf):
-            node["type"] = "terminal"
-            node["class"] = Counter(sub_y).most_common(1)[0][0]
-            return
-
 
         if feature_best is None:
             node["type"] = "terminal"
@@ -189,168 +170,7 @@ class DecisionTree:
         return np.array(predicted)
 
 
-import numpy as np
-
-def find_best_split_linreg(feature_vector, target_vector):
-    sorted_indexes = np.argsort(feature_vector)
-    sorted_features = feature_vector[sorted_indexes]
-    sorted_target = target_vector[sorted_indexes]
-
-    total_sum = np.sum(sorted_target)
-    total_sum_sq = np.sum(sorted_target ** 2)
-
-    left_sum = 0
-    left_sum_sq = 0
-    right_sum = total_sum
-    right_sum_sq = total_sum_sq
-
-    thresholds = (sorted_features[:-1] + sorted_features[1:]) / 2 
-    min_gini = float('inf')
-    best_threshold = None
-
-    n = len(sorted_target)
-    
-    for i in range(1, n):  
-        left_sum += sorted_target[i-1]
-        left_sum_sq += sorted_target[i-1] ** 2
-
-        right_sum -= sorted_target[i-1]
-        right_sum_sq -= sorted_target[i-1] ** 2
-
-
-        left_size = i
-        right_size = n - i
-
-
-        left_variance = (left_sum_sq - (left_sum ** 2) / left_size) / left_size if left_size > 0 else 0
-        right_variance = (right_sum_sq - (right_sum ** 2) / right_size) / right_size if right_size > 0 else 0
-
-        weighted_variance = (left_size * left_variance + right_size * right_variance) / n
-
-
-        if weighted_variance < min_gini:
-            min_gini = weighted_variance
-            best_threshold = thresholds[i-1]
-
-    return thresholds, [], min_gini, best_threshold
-
-    
-    
-    
-
-class LinearRegressionTree(DecisionTree):
+class LinearRegressionTree():
     def __init__(self, feature_types, base_model_type=None, max_depth=None, min_samples_split=None,
                  min_samples_leaf=None):
-        super().__init__(feature_types, max_depth=None, min_samples_split=None,
-                 min_samples_leaf=None)
-    
-    def _fit_node(self, sub_X, sub_y, node, current_depth = 1):
-        
-        model = LinearRegression()
-        
-        if self._max_depth is not None and current_depth > self._max_depth:
-            node["type"] = "terminal"
-            node["prediction"] = model.fit(sub_X, sub_y) 
-            return
-        
-        if self._min_samples_split is not None:
-            if sub_y.shape[0] < self._min_samples_split:  
-                node["type"] = "terminal"
-                node["prediction"] = model.fit(sub_X, sub_y) 
-                return
-        
-
-        if np.all(sub_y == sub_y[0]):
-            node["type"] = "terminal"
-            node["prediction"] = model.fit(sub_X, sub_y) 
-            return
-
-        feature_best, threshold_best, gini_best, split = None, None, None, None
-        for feature in range(0, sub_X.shape[1]):
-            feature_type = self._feature_types[feature]
-            categories_map = {}
-
-            if feature_type == "real":
-                feature_vector = sub_X[:, feature]
-            elif feature_type == "categorical":
-                counts = Counter(sub_X[:, feature])
-                clicks = Counter(sub_X[sub_y == 1, feature])
-                ratio = {}
-                for key, current_count in counts.items():
-                    if key in clicks:
-                        current_click = clicks[key]
-                    else:
-                        current_click = 0
-                    ratio[key] =  current_click / current_count
-                sorted_categories = list(map(lambda x: x[0], sorted(ratio.items(), key=lambda x: x[1])))
-                categories_map = dict(zip(sorted_categories, list(range(len(sorted_categories)))))
-
-                feature_vector = np.array(list(map(lambda x: categories_map[x], sub_X[:, feature])))
-            else:
-                raise ValueError
-
-            if len(feature_vector) < 3: 
-                continue
-            
-            _, _, threshold, variance = find_best_split_linreg(feature_vector, sub_y)
-            if gini_best is None or variance > gini_best:
-                feature_best = feature
-                gini_best = variance
-                split = feature_vector < threshold
-
-                if feature_type == "real":
-                    threshold_best = threshold
-                elif feature_type == "categorical":
-                    threshold_best = list(map(lambda x: x[0],
-                                              filter(lambda x: x[1] < threshold, categories_map.items())))
-                else:
-                    raise ValueError
-
-        if np.sum(split) == 0 or np.sum(np.logical_not(split)) == 0:
-            node["type"] = "terminal"
-            node["prediction"] = model.fit(sub_X, sub_y) 
-            return
-        
-        if self._min_samples_leaf is not None and (np.sum(split) < self._min_samples_leaf or np.sum(np.logical_not(split)) < self._min_samples_leaf):
-            node["type"] = "terminal"
-            node["prediction"] = model.fit(sub_X, sub_y) 
-            return
-
-        if feature_best is None:
-            node["type"] = "terminal"
-            node["prediction"] = model.fit(sub_X, sub_y) 
-            return
-
-        node["type"] = "nonterminal"
-
-        node["feature_split"] = feature_best
-        if self._feature_types[feature_best] == "real":
-            node["threshold"] = threshold_best
-        elif self._feature_types[feature_best] == "categorical":
-            node["categories_split"] = threshold_best
-        else:
-            raise ValueError
-        node["left_child"], node["right_child"] = {}, {}
-        self._fit_node(sub_X[split], sub_y[split], node["left_child"], current_depth + 1)
-        self._fit_node(sub_X[np.logical_not(split)], sub_y[np.logical_not(split)], node["right_child"], current_depth + 1)
-
-    def _predict_node(self, x, node):
-
-        if node['type'] == 'terminal':
-            return node['prediction'].predict([x])
-
-        if self._feature_types[node['feature_split']] == 'real':
-            if x[node['feature_split']] < node['threshold']:
-                return self._predict_node(x, node['left_child'])
-            else:
-                return self._predict_node(x, node['right_child'])
-        else:
-            if x[node['feature_split']] in node['categories_split']:
-                return self._predict_node(x, node['left_child'])
-            else:
-                return self._predict_node(x, node['right_child'])
-
-        
-        
-    
-    
+        pass

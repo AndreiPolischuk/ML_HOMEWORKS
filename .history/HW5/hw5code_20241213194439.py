@@ -337,7 +337,7 @@ class LinearRegressionTree(DecisionTree):
     def _predict_node(self, x, node):
 
         if node['type'] == 'terminal':
-            return node['prediction'].predict([x])
+            return node['prediction'].predict(x)
 
         if self._feature_types[node['feature_split']] == 'real':
             if x[node['feature_split']] < node['threshold']:
