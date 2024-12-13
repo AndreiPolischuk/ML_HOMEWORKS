@@ -69,7 +69,14 @@ class DecisionTree:
         self._min_samples_split = min_samples_split
         self._min_samples_leaf = min_samples_leaf
 
-    def _fit_node(self, sub_X, sub_y, node):
+    def _fit_node(self, sub_X, sub_y, node, current_depth = 1):
+        
+        if self._max_depth is not None and current_depth > self._max_depth:
+            node["type"] = "terminal"
+            node["class"] = Counter(sub_y).most_common(1)[0][0]
+            return
+            
+        
         if sub_y.shape[0] == 0:  # !!!!!!!!!!!!!!!!!!!!!!!
             raise ValueError('Ahtung')
         if np.all(sub_y == sub_y[0]):
@@ -103,6 +110,9 @@ class DecisionTree:
 
             if len(feature_vector) < 3:  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 continue
+            
+          
+            
 
             _, _, threshold, gini = find_best_split(feature_vector, sub_y)
             if gini_best is None or gini > gini_best:
@@ -117,6 +127,12 @@ class DecisionTree:
                                               filter(lambda x: x[1] < threshold, categories_map.items())))
                 else:
                     raise ValueError
+
+        if np.sum(split) == 0 or np.sum(np.logical_not(split)) == 0:
+            node["type"] = "terminal"
+            node["class"] = Counter(sub_y).most_common(1)[0][0]
+            return
+
 
         if feature_best is None:
             node["type"] = "terminal"
@@ -133,8 +149,8 @@ class DecisionTree:
         else:
             raise ValueError
         node["left_child"], node["right_child"] = {}, {}
-        self._fit_node(sub_X[split], sub_y[split], node["left_child"])
-        self._fit_node(sub_X[np.logical_not(split)], sub_y[np.logical_not(split)], node["right_child"])
+        self._fit_node(sub_X[split], sub_y[split], node["left_child"], current_depth + 1)
+        self._fit_node(sub_X[np.logical_not(split)], sub_y[np.logical_not(split)], node["right_child"], current_depth + 1)
 
     def _predict_node(self, x, node):
         # ╰( ͡° ͜ʖ ͡° )つ──☆*:・ﾟ
